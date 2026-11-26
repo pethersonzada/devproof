@@ -52,6 +52,10 @@ A API pública possui limites de requisições. Uma análise acessa metadados, c
 
 Para exposição pública com token compartilhado, configure limites de tráfego, cache e monitoramento antes de escalar; não use um token com acesso amplo a dados privados.
 
+## Validação e diagnóstico
+
+O CI roda verificação de tipos, testes do motor e API, build e testes de ponta a ponta no Chromium, incluindo fluxo de edição, download de texto, impressão PDF e layout responsivo. Em caso de falha, consulte os logs e os artefatos do Playwright na execução do GitHub Actions. Os testes E2E usam respostas simuladas, não dependem de limites ou instabilidade da API externa.
+
 ## Roadmap
 
 - [ ] Autoria baseada em commits e contribuições verificáveis.

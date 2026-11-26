@@ -27,10 +27,11 @@ test("Fluxo completo: importar, agrupar, analisar, comparar e exportar",async({p
  await expect(page.locator(".match-grid article").last()).toContainText("Docker");
  await page.getByRole("button",{name:"Currículo",exact:false}).click();
  await page.getByLabel("Nome",{exact:true}).fill("Nome revisado");
- await page.getByLabel("bevans",{exact:true}).fill("Descrição revisada pelo candidato.");
+ await page.getByRole("textbox",{name:"Descrição de bevans",exact:true}).fill("Descrição revisada pelo candidato.");
  await expect(page.locator("#print-resume")).toContainText("Descrição revisada pelo candidato.");
  const download=page.waitForEvent("download");await page.getByRole("button",{name:"Baixar texto"}).click();expect((await download).suggestedFilename()).toBe("devproof-curriculo.txt");
  await page.emulateMedia({media:"print"});await expect(page.locator("#print-resume")).toBeVisible();await expect(page.locator(".editor")).toBeHidden();
+ const pdf=await page.pdf({format:"A4"});expect(pdf.subarray(0,5).toString()).toBe("%PDF-");expect(pdf.length).toBeGreaterThan(1000);
  expect(errors).toEqual([]);
 });
 test("Layout sem overflow em diferentes tamanhos e erro da API visível",async({page})=>{
@@ -42,5 +43,5 @@ test("Layout sem overflow em diferentes tamanhos e erro da API visível",async({
  }
  await page.getByLabel("Perfil público do GitHub").fill("example");
  await page.getByRole("button",{name:"Importar projetos"}).click();
- await expect(page.getByRole("alert")).toContainText("Limite da API");
+ await expect(page.locator("#import-error[role=alert]")).toContainText("Limite da API");
 });
