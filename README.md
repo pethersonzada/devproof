@@ -29,6 +29,8 @@ Abra http://localhost:3000. Opcionalmente, copie .env.example para .env.local e 
 npm run typecheck
 npm test
 npm run build
+npx playwright install chromium
+npm run test:e2e
 npm start
 ```
 
@@ -41,6 +43,7 @@ Next.js App Router, React, TypeScript e CSS local. As rotas de API consultam exc
 - src/lib/model.ts: contratos de dados.
 - src/app/workspace.tsx: fluxo de importação, seleção e editor.
 - tests/: testes do motor e da API com respostas simuladas.
+- e2e/: fluxo completo em Chromium, com API simulada e verificação responsiva.
 - .github/workflows/ci.yml: checagem de tipos, testes e build.
 
 ## Limites e privacidade
@@ -56,7 +59,7 @@ Para exposição pública com token compartilhado, configure limites de tráfego
 - [ ] Extração de descrições com evidências e revisão.
 - [ ] Persistência, sincronização e autenticação opcional.
 - [ ] Portfólios e exportação PDF dedicada.
-- [ ] Testes de integração em navegador (E2E), cache e proteção contra abuso.
+- [ ] Testes com API real, cache e proteção contra abuso.
 
 ## Licença
 
