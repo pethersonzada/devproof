@@ -124,3 +124,13 @@ test("Personalização da foto, aparência e seções do currículo",async({page
  await page.getByRole("button",{name:"Aplicar estilo simples para ATS"}).click();await expect(cv).toHaveAttribute("data-layout","single");await expect(cv.locator(".cv-avatar")).toHaveCount(0);
  await page.emulateMedia({media:"print"});await expect(cv).toBeVisible();const pdf=await page.pdf({preferCSSPageSize:true});expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
 });
+
+test("Demonstração sem API, salvamento explícito e recuperação",async({page})=>{
+ let calls=0;await page.route("**/api/**",r=>{calls++;return r.abort();});
+ await page.goto("/");await page.getByRole("button",{name:"Experimentar sem GitHub"}).click();
+ await expect(page.locator("#print-resume")).toContainText("Alex Exemplo");await expect(page.getByText("DEMONSTRAÇÃO FICTÍCIA")).toBeVisible();
+ await page.getByLabel("Nome",{exact:true}).fill("Pessoa revisada");await page.getByRole("button",{name:"Salvar neste navegador"}).click();await expect(page.locator(".save-status")).toContainText("Projeto salvo");
+ const download=page.waitForEvent("download");await page.getByRole("button",{name:"Baixar backup"}).click();expect((await download).suggestedFilename()).toBe("devproof-projeto.json");
+ await page.reload();await page.getByRole("button",{name:"Recuperar projeto salvo"}).click();await expect(page.locator("#print-resume")).toContainText("Pessoa revisada");
+ page.once("dialog",d=>d.accept());await page.getByRole("button",{name:"Excluir salvo"}).click();await expect(page.locator(".save-status")).toContainText("excluído");expect(calls).toBe(0);
+});

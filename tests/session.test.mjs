@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {parseSnapshot} from "../src/lib/session.ts";import {initialCv} from "../src/lib/cv.ts";import {demoProfile,demoResume} from "../src/lib/demo.ts";
+const sample=()=>({version:1,savedAt:"2026-11-26",result:demoProfile,selected:[],scans:{},names:{},resume:demoResume,notes:{},options:initialCv(),job:"",demo:true});
+test("backup válido é recuperável",()=>{const data=sample();assert.deepEqual(parseSnapshot(JSON.stringify(data)),data);});
+test("rejeita dados malformados, cores e URLs inseguras",()=>{const data=sample();data.options.design.accent="url(https://bad)";assert.throws(()=>parseSnapshot(JSON.stringify(data)));assert.throws(()=>parseSnapshot("{}"));const next=sample();next.result={...next.result,profile:{...next.result.profile,url:"javascript:alert(1)"}};assert.throws(()=>parseSnapshot(JSON.stringify(next)));});
