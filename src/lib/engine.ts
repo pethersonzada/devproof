@@ -60,10 +60,11 @@ export function groups(repos:Repo[],scans:Record<string,Scan>,names:Record<strin
   const map=new Map<string,Group>();
   for(const repo of repos){
     const name=(own(names,repo.name)||repo.name).trim()||repo.name,key=name.toLocaleLowerCase();
-    const group=map.get(key)||{name,repos:[],skills:[],evidence:[],description:""};
+    const group=map.get(key)||{name,repos:[],skills:[],evidence:[],description:"",signals:[]};
     group.repos.push(repo);
     const evidence=own(scans,repo.name)?.evidence||[];
     group.evidence.push(...evidence);
+    group.signals=[...(group.signals||[]),...(own(scans,repo.name)?.signals||[])];
     group.skills=[...new Set([...group.skills,...(repo.language?[repo.language]:[]),...evidence.filter(x=>x.skill!=="Documentação").map(x=>x.skill)])].sort();
     if(repo.description&&!group.description.includes(repo.description))group.description+=(group.description?" ":"")+repo.description;
     map.set(key,group);

@@ -25,7 +25,9 @@ export function suggestedBullets(group:Group):string[]{
  const e=group.evidence;
  const deps=[...new Set(e.filter(x=>x.kind==="dependency").map(x=>x.skill))];
  const bullets:string[]=[];
+ const signals=[...new Set((group.signals||[]).map(s=>s.label))];
  if(group.repos.length>1)bullets.push("Projeto reúne "+group.repos.length+" repositórios selecionados: "+group.repos.map(r=>r.name).join(", ")+".");
+ if(signals.length)bullets.push("Sinais identificados em arquivos de código: "+signals.slice(0,5).join(", ")+".");
  if(deps.length)bullets.push("Dependências declaradas nos manifestos: "+deps.slice(0,8).join(", ")+".");
  if(e.some(x=>x.skill==="Testes automatizados"))bullets.push("Arquivos de testes automatizados presentes no repositório.");
  if(e.some(x=>x.skill==="GitHub Actions"))bullets.push("Workflows de automação configurados no GitHub Actions.");

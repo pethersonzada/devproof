@@ -1,7 +1,9 @@
 export type Profile = {login:string;name:string;bio:string;avatar:string;url:string;publicRepos:number;location?:string;website?:string};
 export type Repo = {name:string;owner:string;url:string;description:string;language:string;updatedAt:string;fork:boolean;archived:boolean;branch:string;stars:number};
 export type Evidence = {skill:string;kind:"dependency"|"file"|"language";detail:string;url:string};
-export type Scan = {repo:Repo;commit:string;evidence:Evidence[];warnings:string[]};
-export type Group = {name:string;repos:Repo[];skills:string[];evidence:Evidence[];description:string};
+export type CodeSignal={label:string;detail:string;url:string};
+export type ContributionSample={account:string;sampled:number;linked:number;matched:number;commits:string[];more:boolean};
+export type Scan = {repo:Repo;commit:string;evidence:Evidence[];warnings:string[];signals?:CodeSignal[];contribution?:ContributionSample};
+export type Group = {name:string;repos:Repo[];skills:string[];evidence:Evidence[];description:string;signals?:CodeSignal[]};
 export type Resume = {name:string;headline:string;email:string;location:string;summary:string;education:string;experience:string;website:string};
 export type ImportResult = {profile:Profile;repos:Repo[];truncated:boolean};

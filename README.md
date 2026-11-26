@@ -82,3 +82,7 @@ O editor permite foto pública do GitHub, substituição por imagem JPG/PNG/WebP
 Backlog priorizado: https://github.com/pethersonzada/devproof/issues. A demonstração utiliza dados fictícios, sem consumir a API. Não há cobrança ativa. Valide demanda e custos antes de integrar pagamentos.
 
 A proteção inicial usa cache de resultados públicos por 30 segundos, deduplicação de chamadas em andamento e limites por instância de servidor. Isso **não** substitui rate limiting distribuído, orçamento global ou revalidação imediata de visibilidade. Consulte a [estratégia de lançamento](docs/product.md) e o [aviso de funcionamento dos dados](/privacidade).
+
+### Evidências avançadas (issue #6)
+
+A análise consulta até três arquivos de código de 32 KiB selecionados por caminho e detecta sinais lexicais de rotas, autenticação, persistência, interfaces, clientes HTTP e localização. Não retorna o conteúdo dos arquivos. Uma consulta adicional ao histórico da branch padrão, fixada no SHA analisado, amostra até 30 commits e conta os associados pelo GitHub à conta proprietária. Não há autenticação dessa identidade, atribuição de autoria exclusiva, análise de todas as branches ou verificação de execução. Sinais e links são exibidos separadamente e podem alimentar o rascunho revisável. A coleta adicional pode atingir limites da API, com avisos de parcialidade.

@@ -24,3 +24,15 @@ test("análise vincula evidência ao commit e limita leitura",async t=>{
  const scan=await scanRepo("example","devproof");assert.equal(scan.commit,sha);assert.ok(scan.evidence.some(e=>e.skill==="Next.js"&&e.url.endsWith(sha+"/package.json")));
 });
 test("rate limit explícito",async t=>{t.mock.method(globalThis,"fetch",async()=>json({},403));await assert.rejects(importProfile("example"),e=>e.status===429);});
+
+test("consulta código e commits de forma limitada e vinculada ao snapshot",async t=>{
+ const paths=[];
+ t.mock.method(globalThis,"fetch",async url=>{paths.push(url);
+ if(url.endsWith("/repos/example/devproof"))return json(meta);
+ if(url.endsWith("/commits/main"))return json({sha,commit:{tree:{sha}}});
+ if(url.includes("/git/trees/"))return json({tree:[{path:"src/app/api/route.ts",type:"blob",sha,size:100}],truncated:false});
+ if(url.includes("/git/blobs/"))return json({encoding:"base64",size:100,content:Buffer.from("export async function GET(){return fetch('/data')}").toString("base64")});
+ if(url.includes("/commits?"))return json([{sha,author:{login:"example"},commit:{author:{email:"not-returned@example.com"}}},{sha:"b".repeat(40),author:{login:"other"}},{sha:"c".repeat(40),author:null}]);
+ throw Error("Unexpected URL");});
+ const scan=await scanRepo("example","devproof");assert.ok(scan.signals.some(x=>x.label==="Rotas HTTP"&&x.url.endsWith("/src/app/api/route.ts")));assert.equal(scan.contribution.matched,1);assert.equal(scan.contribution.sampled,3);assert.equal(scan.contribution.linked,2);assert.equal(scan.contribution.commits.length,1);assert.ok(!JSON.stringify(scan).includes("not-returned"));assert.ok(paths.some(p=>p.includes("sha="+sha+"&per_page=30")));
+});

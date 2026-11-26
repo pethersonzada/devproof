@@ -1,5 +1,6 @@
 import type { Profile, Repo, ImportResult, Scan } from "./model.ts";
 import { username, repoName, inspect, manifestPaths, type TreeItem } from "./engine.ts";
+import {sourcePaths,inspectSource,sampleContributions} from "./source-analysis.ts";
 
 export class ApiError extends Error {
   readonly status:number;
@@ -63,7 +64,21 @@ export async function scanRepo(rawOwner:string,rawRepo:string):Promise<Scan>{
     }
   }
   warnings.push("Análise por linguagem principal, árvore e até seis manifestos. Presença de código ou dependência não comprova autoria, domínio ou execução.");
-  return {repo,commit:commit.sha,evidence:inspect(repo,commit.sha,tree.tree,manifests),warnings};
+  const sources:Record<string,string>=Object.create(null);
+  for(const item of sourcePaths(tree.tree)){
+    if(!/^[a-f0-9]{40}$/i.test(item.sha))continue;
+    try{
+      const {data:blob}=await github<{content:string;encoding:string;size:number}>(root+"/git/blobs/"+item.sha);
+      if(blob.encoding==="base64"&&blob.size<=32768&&blob.content.length<=50000)sources[item.path]=Buffer.from(blob.content,"base64").toString("utf8");
+    }catch(e){warnings.push("Leitura de código parcial: "+item.path+".");if(e instanceof ApiError&&e.status===429)break;}
+  }
+  let contribution;
+  try{
+    const history=await github<unknown>(root+"/commits?sha="+commit.sha+"&per_page=30");
+    contribution=sampleContributions(repo.owner,repo,history.data,history.next)||undefined;
+  }catch{warnings.push("A amostra de contribuições não pôde ser consultada.");}
+  warnings.push("Sinais de implementação são extraídos de até três arquivos de código por padrões textuais; podem conter falsos positivos e não comprovam execução. A amostra de até 30 commits da branch padrão usa a conta associada pelo GitHub e não comprova identidade, autoria exclusiva ou trabalho em outras branches.");
+  return {repo,commit:commit.sha,evidence:inspect(repo,commit.sha,tree.tree,manifests),signals:inspectSource(repo,commit.sha,sources),contribution,warnings};
 }
 export function apiFailure(error:unknown){
   return Response.json({error:error instanceof ApiError?error.message:"Não foi possível concluir a consulta."},{status:error instanceof ApiError?error.status:500,headers:{"Cache-Control":"no-store"}});
