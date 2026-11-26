@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useRef, type FormEvent } from "react";
+import { useMemo, useState, useRef, useSyncExternalStore, type FormEvent } from "react";
 import { groups, suggestGroup, matchJob, interviewQuestions, own } from "../lib/engine";
 import type { ImportResult, Scan, Resume, Group, Repo } from "../lib/model";
 
@@ -9,6 +9,21 @@ const icons:Record<string,string>={repos:"M3 5h7l2 3h9v12H3z",proof:"M12 2 3 6v6
 function Glyph({name,size=19}:{name:string;size?:number}){return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={icons[name]||icons.repos}/></svg>;}
 
 type Section=typeof sections[number][0];
+const themeKey="devproof:theme";
+const themeEvent="devproof:theme-change";
+let memoryTheme:"light"|"dark"|null=null;
+function themePreference():"light"|"dark"{
+ if(memoryTheme)return memoryTheme;
+ try{return localStorage.getItem(themeKey)==="dark"?"dark":"light";}catch{return "light";}
+}
+function subscribeTheme(notify:()=>void){
+ const sync=()=>{memoryTheme=null;notify();};
+ window.addEventListener("storage",sync);
+ window.addEventListener(themeEvent,notify);
+ return ()=>{window.removeEventListener("storage",sync);window.removeEventListener(themeEvent,notify);};
+}
+function serverTheme():"light"|"dark"{return "light";}
+
 async function read<T>(url:string):Promise<T>{
  const response=await fetch(url);const data=await response.json();
  if(!response.ok)throw new Error(data.error||"Não foi possível concluir a consulta.");
@@ -29,12 +44,12 @@ export default function Workspace(){
  const [user,setUser]=useState(""),[result,setResult]=useState<ImportResult|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState(""),[tab,setTab]=useState<Section>("repos");
  const [selected,setSelected]=useState<string[]>([]),[scans,setScans]=useState<Record<string,Scan>>({}),[scanErrors,setScanErrors]=useState<Record<string,string>>({}),[names,setNames]=useState<Record<string,string>>({}),[running,setRunning]=useState(false),[progress,setProgress]=useState("");
  const [filter,setFilter]=useState(""),[onlySelected,setOnlySelected]=useState(false),[job,setJob]=useState(""),[resume,setResume]=useState<Resume>(initial),[notes,setNotes]=useState<Record<string,string>>({});
- const [theme,setTheme]=useState<"light"|"dark">("light");
+ const theme=useSyncExternalStore(subscribeTheme,themePreference,serverTheme);
  const [scanCount,setScanCount]=useState({done:0,total:0});
  const focusRef=useRef<HTMLDivElement>(null);
  const busy=running||loading;
  function go(next:Section){setTab(next);requestAnimationFrame(()=>focusRef.current?.focus());}
- function changeTheme(){const next=theme==="light"?"dark":"light";setTheme(next);}
+ function changeTheme(){const next=theme==="light"?"dark":"light";memoryTheme=next;try{localStorage.setItem(themeKey,next);}catch{}window.dispatchEvent(new Event(themeEvent));}
  function reset(){if(busy)return;if(window.confirm("Iniciar uma nova sessão? As edições atuais serão descartadas.")){setResult(null);setUser("");setError("");setFilter("");setOnlySelected(false);setTab("repos");setSelected([]);setScans({});setNames({});setNotes({});setScanErrors({});setResume(initial);setJob("");}}
  const projects=useMemo(()=>groups((result?.repos||[]).filter(r=>selected.includes(r.name)),scans,names),[result,selected,scans,names]);
  const skills=useMemo(()=>[...new Set(projects.flatMap(g=>g.skills))].sort(),[projects]);
@@ -56,12 +71,12 @@ export default function Workspace(){
     }catch(e){const message=e instanceof Error?e.message:"Erro na análise.";setScanErrors(prev=>({...prev,[r.name]:message}));if(message.includes("Limite")){setError(message);break;}}
   }}finally{setProgress("");setRunning(false);go("proof");}
  }
- function applySuggestions(){const proposed:Record<string,string>=Object.create(null);for(const r of result?.repos||[]){if(selected.includes(r.name)){const suggestion=suggestGroup(r.name);if(suggestion!==r.name)proposed[r.name]=suggestion;}}setNames(prev=>({...prev,...proposed}));}
+ function applySuggestions(){const proposed:Record<string,string>=Object.create(null);for(const r of result?.repos||[]){if(selected.includes(r.name)){const suggestion=suggestGroup(r.name);if(suggestion!==r.name)proposed[r.name]=suggestion;}}setNames(prev=>{const next={...prev};for(const [name,group] of Object.entries(proposed))if(!own(prev,name))Object.defineProperty(next,name,{value:group,writable:true,enumerable:true,configurable:true});return next;});}
  function exportText(){const text=[resume.name,resume.headline,[resume.email,resume.location,resume.website,result?.profile.url].filter(Boolean).join(" | "),resume.summary,resume.experience?"EXPERIÊNCIA\n"+resume.experience:"","PROJETOS",...projects.map(g=>g.name+"\n"+(own(notes,g.name)??g.description)+"\nTecnologias identificadas: "+g.skills.join(", ")+"\n"+g.repos.map(r=>r.url).join("\n")),resume.education?"FORMAÇÃO\n"+resume.education:""].filter(Boolean).join("\n\n");const url=URL.createObjectURL(new Blob([text],{type:"text/plain;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="devproof-curriculo.txt";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
  return <div className="app-root" data-theme={theme}>
   <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
-  <header className="top"><div className="shell top-inner"><a href="/" className="brand"><Mark/><span>DevProof<span className="accent">.</span></span></a><div className="top-right"><span className="version">BETA</span><LinkOut url="https://github.com/pethersonzada/devproof">GitHub</LinkOut><button className="icon-button" type="button" onClick={changeTheme} aria-label={theme==="light"?"Ativar tema escuro":"Ativar tema claro"}><Glyph name={theme==="light"?"moon":"sun"}/></button></div></div></header>
-  <main id="main-content" className={"shell "+(result?"app-shell":"landing-shell")}>
+  <header className="top"><div className="shell top-inner"><a href="/" className="brand" onClick={e=>{if(result){e.preventDefault();reset();}}}><Mark/><span>DevProof<span className="accent">.</span></span></a><div className="top-right"><span className="version">BETA</span><LinkOut url="https://github.com/pethersonzada/devproof">GitHub</LinkOut><button className="icon-button" type="button" onClick={changeTheme} aria-label={theme==="light"?"Ativar tema escuro":"Ativar tema claro"}><Glyph name={theme==="light"?"moon":"sun"}/></button></div></div></header>
+  <main id="main-content" tabIndex={-1} className={"shell "+(result?"app-shell":"landing-shell")}>
   {!result&&<section className="hero"><div className="hero-text"><p className="eyebrow"><span className="dot"/> SUA CARREIRA, COM EVIDÊNCIAS</p><h1>Seu código.<br/><em>Seu próximo passo.</em></h1><p className="lead">Transforme seus projetos do GitHub em um perfil técnico verificável, prepare-se para vagas e crie um currículo com a sua história.</p>
     <form className="import-form" onSubmit={load}><label htmlFor="username">Perfil público do GitHub</label><div className="input-row"><span className="input-prefix" aria-hidden="true">@</span><input id="username" value={user} onChange={e=>setUser(e.target.value)} placeholder="seu-usuario" required maxLength={120} disabled={loading||running}/><button className="primary" disabled={loading||running}>{loading?"Importando…":"Importar projetos →"}</button></div><small>Sem cadastro · Dados públicos · Gratuito nesta versão</small></form>
   </div><aside className="hero-preview" aria-label="Exemplo ilustrativo do produto"><div className="preview-top"><div className="window-dots" aria-hidden="true"><i/><i/><i/></div><span>Prévia ilustrativa</span><Glyph name="proof" size={17}/></div><div className="preview-content"><div className="preview-profile"><div className="preview-avatar"><Glyph name="repos" size={24}/></div><div><strong>Seu projeto</strong><p>Repositórios conectados</p></div></div><div className="preview-evidence"><span className="preview-kicker">EVIDÊNCIAS TÉCNICAS</span><div><Glyph name="check" size={17}/><strong>Next.js</strong><span>package.json</span></div><div><Glyph name="check" size={17}/><strong>Testes</strong><span>*.spec.ts</span></div><div><Glyph name="check" size={17}/><strong>CI/CD</strong><span>workflows/</span></div></div><div className="preview-document"><Glyph name="resume" size={27}/><div><strong>Currículo profissional</strong><p>Projetos · Competências · Formação</p></div><Glyph name="arrow"/></div><p className="preview-foot">Evidências de arquivos, não notas de competência.</p></div></aside></section>}

@@ -54,3 +54,26 @@ test("Layout sem overflow em diferentes tamanhos e erro da API visível",async({
  await page.getByRole("button",{name:"Importar projetos"}).click();
  await expect(page.locator("#import-error[role=alert]")).toContainText("Limite da API");
 });
+
+test("Preferência de tema persiste e nova sessão protege as edições",async({page})=>{
+ await page.route("**/api/profile?*",route=>route.fulfill({json:profile}));
+ await page.goto("/");
+ await page.getByRole("button",{name:"Ativar tema escuro"}).click();
+ await page.reload();
+ await expect(page.locator(".app-root")).toHaveAttribute("data-theme","dark");
+ await page.getByRole("button",{name:"Ativar tema claro"}).click();
+ await page.getByLabel("Perfil público do GitHub").fill("example");
+ await page.getByRole("button",{name:"Importar projetos"}).click();
+ await expect(page.locator(".workbench")).toBeVisible();
+ await page.getByLabel("Filtrar repositórios").fill("inexistente");
+ await expect(page.getByRole("heading",{name:"Nenhum repositório encontrado"})).toBeVisible();
+ await page.getByRole("button",{name:"Limpar filtros"}).click();
+ await expect(page.locator(".repo")).toHaveCount(2);
+ page.once("dialog",dialog=>dialog.dismiss());
+ await page.getByRole("button",{name:"Nova sessão"}).click();
+ await expect(page.locator(".workbench")).toBeVisible();
+ page.once("dialog",dialog=>dialog.accept());
+ await page.getByRole("button",{name:"Nova sessão"}).click();
+ await expect(page.getByLabel("Perfil público do GitHub")).toBeVisible();
+ await expect(page.locator(".workbench")).toHaveCount(0);
+});
