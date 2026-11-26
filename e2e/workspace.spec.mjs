@@ -34,8 +34,14 @@ test("Fluxo completo: importar, agrupar, analisar, comparar e exportar",async({p
  await expect(page.locator(".match-grid article").last()).toContainText("Docker");
  await page.getByRole("navigation",{name:"Etapas do DevProof"}).getByRole("button",{name:"Currículo",exact:true}).click();
  await page.getByLabel("Nome",{exact:true}).fill("Nome revisado");
+ await page.getByRole("navigation",{name:"Seções do currículo"}).getByRole("button",{name:"Projetos",exact:true}).click();
  await page.getByRole("textbox",{name:"Descrição de bevans",exact:true}).fill("Descrição revisada pelo candidato.");
  await expect(page.locator("#print-resume")).toContainText("Descrição revisada pelo candidato.");
+ await page.getByRole("button",{name:"Sugerir evidências técnicas"}).click();
+ await expect(page.locator("#print-resume")).toContainText("Dependências declaradas");
+ await page.getByRole("navigation",{name:"Seções do currículo"}).getByRole("button",{name:"Modelo",exact:true}).click();
+ await page.getByRole("button",{name:/Contemporâneo/}).click();
+ await expect(page.locator("#print-resume")).toHaveClass(/template-modern/);
  for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}
  await page.setViewportSize({width:1280,height:900});
  const download=page.waitForEvent("download");await page.getByRole("button",{name:"Baixar texto"}).click();expect((await download).suggestedFilename()).toBe("devproof-curriculo.txt");
@@ -76,4 +82,11 @@ test("Preferência de tema persiste e nova sessão protege as edições",async({
  await page.getByRole("button",{name:"Nova sessão"}).click();
  await expect(page.getByLabel("Perfil público do GitHub")).toBeVisible();
  await expect(page.locator(".workbench")).toHaveCount(0);
+});
+
+test("Editor permite organizar projetos, competências e formação",async({page})=>{
+ await page.route("**/api/profile?*",route=>route.fulfill({json:profile}));await page.goto("/");await page.getByLabel("Perfil público do GitHub").fill("example");await page.getByRole("button",{name:"Importar projetos"}).click();await page.getByRole("navigation",{name:"Etapas do DevProof"}).getByRole("button",{name:"Currículo",exact:true}).click();
+ const nav=page.getByRole("navigation",{name:"Seções do currículo"});await nav.getByRole("button",{name:"Projetos",exact:true}).click();await page.getByRole("button",{name:"Subir bevans-backend"}).click();await expect(page.locator("#print-resume .resume-project").first()).toContainText("Bevans Backend");await page.getByRole("checkbox",{name:"Bevans Webapp"}).uncheck();await expect(page.locator("#print-resume .resume-project")).toHaveCount(1);
+ await nav.getByRole("button",{name:"Competências"}).click();await page.getByLabel("Outras competências (separadas por vírgulas)").fill("SQL, Git");await expect(page.locator("#print-resume")).toContainText("SQL");await page.getByRole("checkbox",{name:"SQL",exact:true}).uncheck();await expect(page.locator("#print-resume")).not.toContainText("SQL");
+ await nav.getByRole("button",{name:"Trajetória"}).click();await page.getByRole("button",{name:"+ Adicionar formação"}).click();await page.getByLabel("Curso",{exact:true}).fill("ADS");await page.getByLabel("Instituição",{exact:true}).fill("Faculdade de teste");await expect(page.locator("#print-resume")).toContainText("ADS | Faculdade de teste");
 });

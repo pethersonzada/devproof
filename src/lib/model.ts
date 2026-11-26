@@ -1,4 +1,4 @@
-export type Profile = {login:string;name:string;bio:string;avatar:string;url:string;publicRepos:number};
+export type Profile = {login:string;name:string;bio:string;avatar:string;url:string;publicRepos:number;location?:string;website?:string};
 export type Repo = {name:string;owner:string;url:string;description:string;language:string;updatedAt:string;fork:boolean;archived:boolean;branch:string;stars:number};
 export type Evidence = {skill:string;kind:"dependency"|"file"|"language";detail:string;url:string};
 export type Scan = {repo:Repo;commit:string;evidence:Evidence[];warnings:string[]};

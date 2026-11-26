@@ -6,7 +6,7 @@ export class ApiError extends Error {
   constructor(status:number,message:string){super(message);this.status=status;this.name="ApiError";}
 }
 type GitHubRepo={name:string;owner:{login:string};description:string|null;language:string|null;updated_at:string;fork:boolean;archived:boolean;private:boolean;visibility?:string;default_branch:string;stargazers_count:number};
-type GitHubUser={login:string;name:string|null;bio:string|null;avatar_url:string;public_repos:number};
+type GitHubUser={login:string;name:string|null;bio:string|null;avatar_url:string;public_repos:number;location?:string|null;blog?:string|null};
 const api="https://api.github.com";
 async function github<T>(path:string):Promise<{data:T;next:boolean}>{
   const headers:Record<string,string>={Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","User-Agent":"DevProof"};
@@ -28,7 +28,7 @@ export async function importProfile(raw:string):Promise<ImportResult>{
   const login=username(raw);if(!login)throw new ApiError(400,"Informe um usuário válido do GitHub.");
   const {data:user}=await github<GitHubUser>("/users/"+encodeURIComponent(login));
   if(!username(user.login))throw new ApiError(502,"Perfil inesperado.");
-  const profile:Profile={login:user.login,name:user.name||user.login,bio:user.bio||"",avatar:user.avatar_url,url:"https://github.com/"+encodeURIComponent(user.login),publicRepos:user.public_repos};
+  const profile:Profile={login:user.login,name:user.name||user.login,bio:user.bio||"",avatar:user.avatar_url,url:"https://github.com/"+encodeURIComponent(user.login),publicRepos:user.public_repos,location:user.location||"",website:user.blog||""};
   const repos:Repo[]=[];let next=true,page=1;
   while(next&&page<=10){
     const result=await github<GitHubRepo[]>("/users/"+encodeURIComponent(user.login)+"/repos?type=owner&sort=updated&per_page=100&page="+page);
