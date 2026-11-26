@@ -29,8 +29,17 @@ test("Fluxo completo: importar, agrupar, analisar, comparar e exportar",async({p
  await expect(page.locator(".proof-card")).toHaveCount(1);
  await expect(page.getByRole("link",{name:"Fonte"})).toHaveCount(2);
  await page.getByRole("button",{name:"Vaga e entrevista"}).click();
+ await page.getByLabel("Descrição da vaga").fill("desenvolvedor");
+ await expect(page.getByRole("heading",{name:"Precisamos de requisitos técnicos"})).toBeVisible();
+ await expect(page.locator(".match-grid")).toHaveCount(0);
+ await page.getByRole("button",{name:"Backend Java",exact:true}).click();
+ await expect(page.getByLabel("Descrição da vaga")).toHaveValue(/Spring Boot/);
+ await expect(page.getByText("Lista ilustrativa de Backend Java, não uma vaga real.")).toBeVisible();
  await page.getByLabel("Descrição da vaga").fill("Java, Next.js, Spring Boot e Docker");
  await expect(page.locator(".match-grid article").first()).toContainText("Spring Boot");
+ await page.locator(".job-skill summary").filter({hasText:"Spring Boot"}).click();
+ await expect(page.locator(".job-source a").filter({hasText:"Dependência em manifesto"})).toBeVisible();
+ await expect(page.locator(".job-ranked")).toContainText("bevans");
  await expect(page.locator(".match-grid article").last()).toContainText("Docker");
  await page.getByRole("navigation",{name:"Etapas do DevProof"}).getByRole("button",{name:"Currículo",exact:true}).click();
  await page.getByLabel("Nome",{exact:true}).fill("Nome revisado");

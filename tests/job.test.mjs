@@ -1,0 +1,5 @@
+import test from "node:test";import assert from "node:assert/strict";import {assessJob,roles} from "../src/lib/job.ts";
+const projects=[{name:"sample",skills:["Java","Spring Boot"],evidence:[{skill:"Spring Boot",kind:"dependency",detail:"pom.xml",url:"https://github.com/example/sample/blob/main/pom.xml"}],repos:[{name:"sample",language:"Java",url:"https://github.com/example/sample"}],description:""}];
+test("cargo genérico não inventa requisitos",()=>{const a=assessJob("desenvolvedor",projects);assert.equal(a.total,0);assert.deepEqual(a.ranked,[]);});
+test("resultados ligam tecnologias a evidências e não confundem JavaScript",()=>{const a=assessJob("Java, Spring Boot, JavaScript e Docker",projects);assert.equal(a.total,4);assert.deepEqual(a.matched,["Java","Spring Boot"]);assert.equal(a.matches[1].projects[0].evidence[0].detail,"pom.xml");assert.deepEqual(a.ranked[0].skills,["Java","Spring Boot"]);});
+test("listas ilustrativas reconhecem tecnologias mobile e dados",()=>{for(const r of roles){assert.ok(assessJob(r.text,projects).total>=4);}assert.ok(assessJob("Expo, Power BI e pandas",[]).missing.includes("Power BI"));});

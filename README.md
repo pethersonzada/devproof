@@ -10,7 +10,7 @@ DevProof é uma plataforma de inteligência de carreira para desenvolvedores. Im
 - Seleção de projetos, filtros e análise individual ou sequencial.
 - Evidências de linguagem principal, dependências de manifestos, testes, workflows, documentação e infraestrutura. Links de arquivos vinculados ao commit analisado.
 - Sugestões de agrupamento por nome, editáveis e confirmadas pelo usuário.
-- Comparador de tecnologias em vagas e perguntas de entrevista baseadas nos projetos.
+- Comparador de requisitos técnicos com exemplos por área (claramente ilustrativos), orientação para cargos genéricos, fontes por tecnologia, projetos ordenados por correspondências e perguntas de entrevista. Não atribui pontuação de empregabilidade.
 - Studio de currículo com cinco seções, três modelos de uma coluna, edição estruturada de trajetória, competências selecionáveis, ordenação de projetos, sugestões rastreáveis, texto para download e impressão PDF pelo navegador. Perfil público preenche nome, localização e site quando disponíveis.
 - Interface responsiva, sem conta, banco de dados ou serviço de IA.
 
