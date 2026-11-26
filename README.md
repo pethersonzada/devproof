@@ -80,3 +80,5 @@ O editor permite foto pública do GitHub, substituição por imagem JPG/PNG/WebP
 ## Lançamento comercial
 
 Backlog priorizado: https://github.com/pethersonzada/devproof/issues. A demonstração utiliza dados fictícios, sem consumir a API. Não há cobrança ativa. Valide demanda e custos antes de integrar pagamentos.
+
+A proteção inicial usa cache de resultados públicos por 30 segundos, deduplicação de chamadas em andamento e limites por instância de servidor. Isso **não** substitui rate limiting distribuído, orçamento global ou revalidação imediata de visibilidade. Consulte a [estratégia de lançamento](docs/product.md) e o [aviso de funcionamento dos dados](/privacidade).

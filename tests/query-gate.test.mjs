@@ -1,0 +1,4 @@
+import test from "node:test";import assert from "node:assert/strict";import {createQueryGate} from "../src/lib/query-gate.ts";
+test("deduplica consultas concorrentes e guarda resultado",async()=>{const q=createQueryGate();let count=0;const load=async()=>++count;const result=await Promise.all([q("a",load),q("a",load)]);assert.deepEqual(result,[1,1]);assert.equal(await q("a",load),1);assert.equal(count,1);});
+test("limita orçamento e não guarda falha",async()=>{const q=createQueryGate({maxStarts:2});await assert.rejects(q("a",async()=>{throw Error("falha");}));assert.equal(await q("a",async()=>42),42);await assert.rejects(q("b",async()=>1),e=>e.status===429);});
+test("limita concorrência",async()=>{const q=createQueryGate({maxActive:1});let finish;const first=q("a",()=>new Promise(r=>{finish=r;}));await Promise.resolve();await assert.rejects(q("b",async()=>2),e=>e.status===429);finish(1);assert.equal(await first,1);});
