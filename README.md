@@ -72,3 +72,7 @@ O CI roda verificação de tipos, testes do motor e API, build e testes de ponta
 ## Licença
 
 MIT. Projeto independente, sem afiliação com GitHub.
+
+### Personalização do currículo
+
+O editor permite foto pública do GitHub, substituição por imagem JPG/PNG/WebP local (até 5 MB, redimensionada no navegador) ou remoção da foto. Cores, família e tamanho de fontes, margens, papel A4/Letter, entrelinhas, alinhamento, uma ou duas colunas, marcadores, divisórias, forma e recorte da foto são configuráveis. Seções podem ser ocultadas, renomeadas e reordenadas; seções personalizadas são adicionadas manualmente. A exportação em texto respeita a visibilidade e ordem do conteúdo. O modo simples recomenda uma coluna sem foto; não garante compatibilidade com todos os ATS. As fotos enviadas e o currículo permanecem na memória da sessão; não são enviados a um servidor. A foto pública do GitHub é carregada diretamente do serviço de avatares.

@@ -102,3 +102,19 @@ test("Editor permite organizar projetos, competências e formação",async({page
  await nav.getByRole("button",{name:"Competências"}).click();await page.getByLabel("Outras competências (separadas por vírgulas)").fill("SQL, Git");await expect(page.locator("#print-resume")).toContainText("SQL");await page.getByRole("checkbox",{name:"SQL",exact:true}).uncheck();await expect(page.locator("#print-resume")).not.toContainText("SQL");
  await nav.getByRole("button",{name:"Trajetória"}).click();await page.getByRole("button",{name:"+ Adicionar formação"}).click();await page.getByLabel("Curso",{exact:true}).fill("ADS");await page.getByLabel("Instituição",{exact:true}).fill("Faculdade de teste");await expect(page.locator("#print-resume")).toContainText("ADS | Faculdade de teste");
 });
+
+test("Personalização da foto, aparência e seções do currículo",async({page})=>{
+ const avatar="https://avatars.githubusercontent.com/u/42?v=4";
+ const png=Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a1kAAAAAASUVORK5CYII=","base64");
+ await page.route("https://avatars.githubusercontent.com/**",r=>r.fulfill({contentType:"image/png",body:png}));
+ await page.route("**/api/profile?*",r=>r.fulfill({json:{...profile,profile:{...profile.profile,avatar}}}));
+ await page.goto("/");await page.getByLabel("Perfil público do GitHub").fill("example");await page.getByRole("button",{name:"Importar projetos"}).click();await page.getByRole("navigation",{name:"Etapas do DevProof"}).getByRole("button",{name:"Currículo",exact:true}).click();
+ const cv=page.locator("#print-resume");await expect(cv.getByRole("img",{name:"Foto de perfil"})).toHaveAttribute("src",avatar);
+ await page.getByRole("navigation",{name:"Seções do currículo"}).getByRole("button",{name:"Modelo",exact:true}).click();await page.getByLabel("Exibir foto no currículo").uncheck();await expect(cv.locator(".cv-avatar")).toHaveCount(0);await page.getByRole("button",{name:"Usar foto do GitHub"}).click();await expect(cv.locator(".cv-avatar")).toHaveCount(1);
+ await page.getByLabel("Formato da foto").selectOption("square");await expect(cv.locator(".cv-avatar")).toHaveClass(/shape-square/);
+ await page.getByLabel("Layout",{exact:true}).selectOption("columns");await expect(cv).toHaveAttribute("data-layout","columns");await page.getByLabel("Família tipográfica").selectOption("serif");await expect(cv).toHaveCSS("font-family",/Georgia/);
+ await page.getByLabel("Título da seção projects").fill("Portfólio técnico");await expect(cv.getByRole("heading",{name:"Portfólio técnico"})).toBeVisible();await page.getByRole("checkbox",{name:"Portfólio técnico",exact:true}).uncheck();await expect(cv.getByRole("heading",{name:"Portfólio técnico"})).toHaveCount(0);
+ await page.locator("summary").filter({hasText:"Seções personalizadas"}).click();await page.getByRole("button",{name:"+ Adicionar seção personalizada"}).click();await page.getByLabel("Título da seção personalizada").fill("Voluntariado");await page.getByLabel("Conteúdo",{exact:true}).fill("Ação comunitária");await expect(cv).toContainText("Ação comunitária");
+ await page.getByRole("button",{name:"Aplicar estilo simples para ATS"}).click();await expect(cv).toHaveAttribute("data-layout","single");await expect(cv.locator(".cv-avatar")).toHaveCount(0);
+ await page.emulateMedia({media:"print"});await expect(cv).toBeVisible();const pdf=await page.pdf({preferCSSPageSize:true});expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+});
