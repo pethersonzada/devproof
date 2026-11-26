@@ -38,7 +38,7 @@ test("Fluxo completo: importar, agrupar, analisar, comparar e exportar",async({p
  await page.getByLabel("Descrição da vaga").fill("Java, Next.js, Spring Boot e Docker");
  await expect(page.locator(".match-grid article").first()).toContainText("Spring Boot");
  await page.locator(".job-skill summary").filter({hasText:"Spring Boot"}).click();
- await expect(page.locator(".job-source a").filter({hasText:"Dependência em manifesto"})).toBeVisible();
+ await expect(page.locator(".job-skill").filter({has:page.locator("summary").filter({hasText:"Spring Boot"})}).locator(".job-source a").filter({hasText:"Dependência em manifesto"})).toBeVisible();
  await expect(page.locator(".job-ranked")).toContainText("bevans");
  await expect(page.locator(".match-grid article").last()).toContainText("Docker");
  await page.getByRole("navigation",{name:"Etapas do DevProof"}).getByRole("button",{name:"Currículo",exact:true}).click();

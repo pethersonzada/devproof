@@ -1,20 +1,19 @@
 "use client";
-import {useMemo,useState} from "react";
+import {useMemo} from "react";
 import {assessJob,roles} from "../lib/job";
 import {interviewQuestions} from "../lib/engine";
 import type {Group} from "../lib/model";
 type Props={job:string;setJob:(value:string)=>void;projects:Group[];goResume:()=>void;goProjects:()=>void};
 export default function JobStudio({job,setJob,projects,goResume,goProjects}:Props){
- const [role,setRole]=useState("");
  const result=useMemo(()=>assessJob(job,projects),[job,projects]);
- const suggestions=roles.filter(r=>r.id===role);
- const active=roles.find(r=>r.id===role);
- function apply(id:string){const preset=roles.find(r=>r.id===id);if(!preset)return;setRole(id);setJob(preset.text);}
+ const active=roles.find(r=>r.text===job);
+ const role=active?.id||"";
+ function apply(id:string){const preset=roles.find(r=>r.id===id);if(!preset)return;setJob(preset.text);}
  const ranked=[...projects].sort((a,b)=>(result.ranked.find(x=>x.name===b.name)?.skills.length||0)-(result.ranked.find(x=>x.name===a.name)?.skills.length||0));
  return <section className="panel job-studio"><div className="section-head"><div><p className="eyebrow">03 / PREPARAÇÃO</p><h2>Prepare sua candidatura</h2><p>Compare os requisitos técnicos de uma vaga com os seus projetos e prepare respostas para a entrevista.</p></div></div>
  <div className="job-input-card"><div className="job-card-head"><h3>Qual vaga você busca?</h3><p>Tem uma vaga real? Cole os requisitos abaixo. Ainda explorando? Experimente uma lista de exemplo por área.</p></div><div className="job-presets" role="group" aria-label="Exemplos de requisitos por área">{roles.map(r=><button key={r.id} type="button" aria-pressed={role===r.id} onClick={()=>apply(r.id)}>{r.name}</button>)}</div>
- <label className="field">Descrição da vaga<textarea value={job} onChange={e=>{setRole("");setJob(e.target.value);}} placeholder="Ex.: Buscamos desenvolvedor Java com Spring Boot, PostgreSQL e Docker..." rows={4} maxLength={15000}/></label>
- <div className="job-input-footer"><small>{active?"Lista ilustrativa de "+active.name+", não uma vaga real.":"A análise é atualizada enquanto você digita."}</small><button className="quiet" disabled={!job} onClick={()=>{setJob("");setRole("");}}>Limpar texto</button></div></div>
+ <label className="field">Descrição da vaga<textarea value={job} onChange={e=>setJob(e.target.value)} placeholder="Ex.: Buscamos desenvolvedor Java com Spring Boot, PostgreSQL e Docker..." rows={4} maxLength={15000}/></label>
+ <div className="job-input-footer"><small>{active?"Lista ilustrativa de "+active.name+", não uma vaga real.":"A análise é atualizada enquanto você digita."}</small><button className="quiet" disabled={!job} onClick={()=>setJob("")}>Limpar texto</button></div></div>
  {!job.trim()?<div className="job-state"><h3>Insira os requisitos para começar</h3><p>Escolha uma área acima ou cole o texto de uma oportunidade. Você também pode seguir diretamente para o currículo.</p></div>:result.total===0?<div className="job-state job-state-guidance" role="status"><h3>Precisamos de requisitos técnicos</h3><p>O texto informado não contém tecnologias reconhecidas. Um cargo como “desenvolvedor” não indica uma stack. Escolha uma área acima ou informe requisitos como Java, React, SQL ou Docker.</p><small>Não é possível concluir se você atende à vaga com base apenas no cargo.</small></div>:<>
  <div className="job-result-header" aria-live="polite"><div><p className="eyebrow">RESULTADO DA COMPARAÇÃO</p><h3>{result.matched.length} de {result.total} tecnologias reconhecidas têm sinal nos projetos</h3><p>Este é um levantamento de tecnologias, não uma nota de empregabilidade.</p></div><div className="job-meter"><progress aria-label="Tecnologias reconhecidas com sinal nos projetos" value={result.matched.length} max={result.total}/><small>{result.matched.length} encontradas · {result.missing.length} sem sinal</small></div></div>
  <div className="match-grid"><article><h3>Tecnologias encontradas ({result.matched.length})</h3>{result.matches.length?result.matches.map(m=><details className="job-skill" key={m.skill}><summary>{m.skill} <small>{m.projects.length} projeto(s)</small></summary>{m.projects.map(p=><div key={p.name} className="job-source"><strong>{p.name}</strong>{p.evidence.length?p.evidence.map((e,i)=><a key={i} href={e.url} target="_blank" rel="noopener noreferrer">{e.detail} ↗</a>):p.repos.length?p.repos.map(r=><a key={r.name} href={r.url} target="_blank" rel="noopener noreferrer">{r.name} · linguagem principal ↗</a>):<small>Sinal disponível nos metadados.</small>}</div>)}</details>):<p>Nenhuma tecnologia reconhecida aparece nos projetos selecionados.</p>}</article><article><h3>Sem evidência na seleção ({result.missing.length})</h3><div className="skill-tags missing">{result.missing.map(s=><span key={s}>{s}</span>)}</div><p>{result.missing.length?"Verifique se há projetos não selecionados ou conhecimentos que você possa comprovar. Ausência de sinal não significa falta de competência.":"Todas as tecnologias reconhecidas no texto aparecem na seleção."}</p>{result.missing.length>0&&<button className="quiet" onClick={goProjects}>Revisar projetos</button>}</article></div>
