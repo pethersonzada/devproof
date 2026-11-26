@@ -14,6 +14,10 @@ DevProof é uma plataforma de inteligência de carreira para desenvolvedores. Im
 - Editor de currículo, texto para download e impressão em PDF pelo navegador.
 - Interface responsiva, sem conta, banco de dados ou serviço de IA.
 
+## Experiência do usuário
+
+A entrada do produto é independente do painel de trabalho. Após importar, o usuário navega por quatro etapas, com resumo de seleção, busca e filtro, sugestões de agrupamento, progresso de análise e prévia do currículo. Temas claro e escuro são selecionáveis durante a sessão. Nova sessão exige confirmação para descartar alterações. O layout usa barra lateral no desktop e navegação compacta no celular.
+
 ## Executar
 
 Node.js 24 recomendado.

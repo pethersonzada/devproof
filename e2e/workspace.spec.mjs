@@ -14,6 +14,13 @@ test("Fluxo completo: importar, agrupar, analisar, comparar e exportar",async({p
  await page.getByLabel("Perfil público do GitHub").fill("example");
  await page.getByRole("button",{name:"Importar projetos"}).click();
  await expect(page.getByRole("heading",{name:"Pessoa de teste"})).toBeVisible();
+ await expect(page.locator(".hero")).toHaveCount(0);
+ await page.getByRole("button",{name:"Ativar tema escuro"}).click();
+ await expect(page.locator(".app-root")).toHaveAttribute("data-theme","dark");
+ await page.getByRole("button",{name:"Ativar tema claro"}).click();
+ await page.getByRole("button",{name:"Só selecionados"}).click();
+ await expect(page.locator(".repo")).toHaveCount(2);
+ await page.getByRole("button",{name:"Só selecionados"}).click();
  await page.getByRole("button",{name:"Aplicar sugestões de grupo"}).click();
  await expect(page.getByLabel("Grupo de bevans-webapp")).toHaveValue("bevans");
  await page.getByRole("button",{name:"Analisar selecionados"}).click();
@@ -25,10 +32,12 @@ test("Fluxo completo: importar, agrupar, analisar, comparar e exportar",async({p
  await page.getByLabel("Descrição da vaga").fill("Java, Next.js, Spring Boot e Docker");
  await expect(page.locator(".match-grid article").first()).toContainText("Spring Boot");
  await expect(page.locator(".match-grid article").last()).toContainText("Docker");
- await page.getByRole("button",{name:"Currículo",exact:false}).click();
+ await page.getByRole("navigation",{name:"Etapas do DevProof"}).getByRole("button",{name:"Currículo",exact:true}).click();
  await page.getByLabel("Nome",{exact:true}).fill("Nome revisado");
  await page.getByRole("textbox",{name:"Descrição de bevans",exact:true}).fill("Descrição revisada pelo candidato.");
  await expect(page.locator("#print-resume")).toContainText("Descrição revisada pelo candidato.");
+ for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);}
+ await page.setViewportSize({width:1280,height:900});
  const download=page.waitForEvent("download");await page.getByRole("button",{name:"Baixar texto"}).click();expect((await download).suggestedFilename()).toBe("devproof-curriculo.txt");
  await page.emulateMedia({media:"print"});await expect(page.locator("#print-resume")).toBeVisible();await expect(page.locator(".editor")).toBeHidden();
  const pdf=await page.pdf({format:"A4"});expect(pdf.subarray(0,5).toString()).toBe("%PDF-");expect(pdf.length).toBeGreaterThan(1000);
