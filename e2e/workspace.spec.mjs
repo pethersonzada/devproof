@@ -39,6 +39,9 @@ test("Fluxo completo: importar, agrupar, analisar, comparar e exportar",async({p
  await expect(page.locator("#print-resume")).toContainText("Descrição revisada pelo candidato.");
  await page.getByRole("button",{name:"Sugerir evidências técnicas"}).click();
  await expect(page.locator("#print-resume")).toContainText("Dependências declaradas");
+ await page.getByRole("button",{name:"Preparar rascunho"}).click();
+ await expect(page.locator("#print-resume")).toContainText("Perfil com projetos de software disponíveis no GitHub");
+ await expect(page.locator("#print-resume")).toContainText("Descrição revisada pelo candidato.");
  await page.getByRole("navigation",{name:"Seções do currículo"}).getByRole("button",{name:"Modelo",exact:true}).click();
  await page.getByRole("button",{name:/Contemporâneo/}).click();
  await expect(page.locator("#print-resume")).toHaveClass(/template-modern/);

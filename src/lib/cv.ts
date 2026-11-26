@@ -25,6 +25,16 @@ export function suggestedBullets(group:Group):string[]{
  if(e.some(x=>x.skill==="Docker"))bullets.push("Arquivos de configuração de contêiner identificados.");
  return bullets.slice(0,4);
 }
+export function suggestedDescription(group:Group):string{
+ const source=group.repos.map(r=>r.description.trim()).filter(Boolean);
+ const description=source[0]||group.description.trim();
+ const clean=description.replace(/\s+/g," ").trim();
+ const shortened=clean.length>270?clean.slice(0,267).replace(/\s+\S*$/,"")+"…":clean;
+ const parts:string[]=[];
+ if(shortened)parts.push(shortened);
+ if(group.repos.length>1)parts.push("Componentes selecionados: "+group.repos.map(r=>r.name).join(", ")+".");
+ return parts.join(" ");
+}
 export function suggestionSummary(groups:Group[],options:CvOptions){
  const projects=cvProjects(groups,options),skills=cvSkills(groups,options);
  if(!projects.length)return "";
