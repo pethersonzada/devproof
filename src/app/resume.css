@@ -15,3 +15,12 @@
 @media print{#print-resume.cv-custom{padding:0!important;aspect-ratio:auto!important;min-height:0!important;font-family:var(--cv-font)!important;font-size:var(--cv-size)!important;line-height:var(--cv-leading)!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}#print-resume.cv-custom h1{font-size:var(--cv-name)!important}#print-resume.cv-custom h2{font-size:1em!important}#print-resume.cv-custom h3{font-size:1.02em!important}#print-resume.cv-custom .cv-avatar{width:var(--cv-photo);max-width:32%;object-position:var(--cv-photo-position)}#print-resume.cv-custom a{color:var(--cv-accent)!important}#print-resume.cv-custom .cv-contact{font-size:.88em}#print-resume.cv-custom[data-layout=columns] .cv-document-body{columns:2}}
 
 @media screen{.cv-document.cv-custom{padding:var(--cv-margin-percent);aspect-ratio:var(--cv-ratio)}.cv-control-group>summary{min-height:40px;display:list-item}.cv-section-control .cv-move button{min-height:40px;width:40px}.cv-swatch{width:36px;min-height:36px}}
+
+/* #15: a proporção do papel é apenas um tamanho mínimo, nunca uma altura fixa. */
+@media screen {
+ .cv-studio .resume-preview {position:static;min-width:0;container-type:inline-size;align-self:start;}
+ .cv-document.cv-custom {width:100%;height:auto;max-height:none;aspect-ratio:auto;min-height:calc(100cqw * var(--cv-page-factor,1.414285714));overflow:visible;}
+ .cv-document.cv-custom .cv-document-body {min-width:0;}
+ .cv-document.cv-custom section {overflow-wrap:anywhere;}
+}
+@media print { .cv-studio .resume-preview {container-type:normal!important;} }

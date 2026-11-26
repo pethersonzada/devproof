@@ -134,3 +134,18 @@ test("Demonstração sem API, salvamento explícito e recuperação",async({page
  await page.reload();await page.getByRole("button",{name:"Recuperar projeto salvo"}).click();await expect(page.locator("#print-resume")).toContainText("Pessoa revisada");
  page.once("dialog",d=>d.accept());await page.getByRole("button",{name:"Excluir salvo"}).click();await expect(page.locator(".save-status")).toContainText("excluído");expect(calls).toBe(0);
 });
+
+test("Regressão #15: currículo longo permanece dentro do papel e antes do rodapé",async({page})=>{
+ const longRepos=Array.from({length:6},(_,i)=>({...profile.repos[0],name:"projeto-"+i,url:"https://github.com/example/projeto-"+i,description:("Descrição detalhada de funcionalidade e evidências do sistema. ").repeat(15)}));
+ await page.route("**/api/profile?*",r=>r.fulfill({json:{...profile,repos:longRepos}}));
+ await page.goto("/");await page.getByLabel("Perfil público do GitHub").fill("example");await page.getByRole("button",{name:"Importar projetos"}).click();
+ await page.getByRole("navigation",{name:"Etapas do DevProof"}).getByRole("button",{name:"Currículo",exact:true}).click();
+ const cv=page.locator("#print-resume");await expect(cv.locator(".resume-project")).toHaveCount(6);
+ async function check(){const bounds=await page.evaluate(()=>{const paper=document.querySelector("#print-resume"),content=paper.querySelector(".cv-document-body"),footer=document.querySelector("footer.footer"),panel=document.querySelector(".resume-panel");return {paper:paper.getBoundingClientRect().bottom,content:content.getBoundingClientRect().bottom,footer:footer.getBoundingClientRect().top,panel:panel.getBoundingClientRect().bottom,overflow:paper.scrollHeight-paper.clientHeight};});expect(bounds.content).toBeLessThanOrEqual(bounds.paper+1);expect(bounds.paper).toBeLessThanOrEqual(bounds.panel+1);expect(bounds.panel).toBeLessThanOrEqual(bounds.footer+1);expect(bounds.overflow).toBeLessThanOrEqual(1);}
+ for(const width of [1440,1024,390]){await page.setViewportSize({width,height:900});await check();}
+ await page.getByRole("navigation",{name:"Seções do currículo"}).getByRole("button",{name:"Modelo",exact:true}).click();
+ await page.getByLabel("Papel",{exact:true}).selectOption("Letter");
+ await page.setViewportSize({width:1440,height:900});await check();
+ await page.getByLabel("Layout",{exact:true}).selectOption("columns");await check();
+ await page.emulateMedia({media:"print"});const pdf=await page.pdf({preferCSSPageSize:true});expect(pdf.subarray(0,5).toString()).toBe("%PDF-");
+});
