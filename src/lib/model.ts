@@ -1,0 +1,7 @@
+export type Profile = {login:string;name:string;bio:string;avatar:string;url:string;publicRepos:number};
+export type Repo = {name:string;owner:string;url:string;description:string;language:string;updatedAt:string;fork:boolean;archived:boolean;branch:string;stars:number};
+export type Evidence = {skill:string;kind:"dependency"|"file"|"language";detail:string;url:string};
+export type Scan = {repo:Repo;commit:string;evidence:Evidence[];warnings:string[]};
+export type Group = {name:string;repos:Repo[];skills:string[];evidence:Evidence[];description:string};
+export type Resume = {name:string;headline:string;email:string;location:string;summary:string;education:string;experience:string;website:string};
+export type ImportResult = {profile:Profile;repos:Repo[];truncated:boolean};
