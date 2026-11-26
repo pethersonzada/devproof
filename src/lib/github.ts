@@ -1,5 +1,5 @@
-import type { Profile, Repo, ImportResult, Scan } from "./model";
-import { username, repoName, inspect, manifestPaths, type TreeItem } from "./engine";
+import type { Profile, Repo, ImportResult, Scan } from "./model.ts";
+import { username, repoName, inspect, manifestPaths, type TreeItem } from "./engine.ts";
 
 export class ApiError extends Error {
   constructor(public status:number,message:string){super(message);}

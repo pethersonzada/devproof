@@ -1,4 +1,4 @@
-import type { Repo, Evidence, Scan, Group } from "./model";
+import type { Repo, Evidence, Scan, Group } from "./model.ts";
 
 export function username(value:string) {
   const clean=value.trim().replace(/^@/,"").replace(/^https:\/\/github\.com\//i,"").replace(/\/$/,"");
@@ -55,13 +55,14 @@ export function inspect(repo:Repo,sha:string,items:TreeItem[],manifests:Record<s
   for(const [pattern,skill,detail] of rules){const file=items.find(x=>x.type==="blob"&&pattern.test(x.path));if(file)add(skill,"file",detail+": "+file.path,file.path);}
   return [...found.values()].sort((a,b)=>a.skill.localeCompare(b.skill,"pt-BR"));
 }
+export function own<T>(record:Record<string,T>,key:string):T|undefined{return Object.hasOwn(record,key)?record[key]:undefined;}
 export function groups(repos:Repo[],scans:Record<string,Scan>,names:Record<string,string>):Group[]{
   const map=new Map<string,Group>();
   for(const repo of repos){
-    const name=(names[repo.name]||repo.name).trim()||repo.name,key=name.toLocaleLowerCase();
+    const name=(own(names,repo.name)||repo.name).trim()||repo.name,key=name.toLocaleLowerCase();
     const group=map.get(key)||{name,repos:[],skills:[],evidence:[],description:""};
     group.repos.push(repo);
-    const evidence=scans[repo.name]?.evidence||[];
+    const evidence=own(scans,repo.name)?.evidence||[];
     group.evidence.push(...evidence);
     group.skills=[...new Set([...group.skills,...(repo.language?[repo.language]:[]),...evidence.filter(x=>x.skill!=="Documentação").map(x=>x.skill)])].sort();
     if(repo.description&&!group.description.includes(repo.description))group.description+=(group.description?" ":"")+repo.description;
@@ -69,12 +70,12 @@ export function groups(repos:Repo[],scans:Record<string,Scan>,names:Record<strin
   }
   return [...map.values()];
 }
-const aliases:Record<string,string[]>={"Java":["java"],"JavaScript":["javascript","js"],"TypeScript":["typescript","ts"],"React":["react"],"React Native":["react native"],"Next.js":["next.js","nextjs"],"Spring Boot":["spring boot","springboot"],"Python":["python"],"FastAPI":["fastapi"],"SQL":["sql"],"PostgreSQL":["postgresql","postgres"],"Docker":["docker"],"Kubernetes":["kubernetes","k8s"],"GitHub Actions":["github actions","ci/cd"],"Firebase":["firebase"],"AWS":["aws"],"Azure":["azure"],"Linux":["linux"],"Testes automatizados":["testes automatizados","automated testing"],"MongoDB":["mongodb"],"Vue":["vue"],"Angular":["angular"],"Git":["git"],"Node.js":["node.js","nodejs"]};
+const aliases:Record<string,string[]>={"Java":["java"],"JavaScript":["javascript"],"TypeScript":["typescript"],"React":["react"],"React Native":["react native"],"Next.js":["next.js","nextjs"],"Spring Boot":["spring boot","springboot"],"Python":["python"],"FastAPI":["fastapi"],"SQL":["sql"],"PostgreSQL":["postgresql","postgres"],"Docker":["docker"],"Kubernetes":["kubernetes","k8s"],"GitHub Actions":["github actions","ci/cd"],"Firebase":["firebase"],"AWS":["aws"],"Azure":["azure"],"Linux":["linux"],"Testes automatizados":["testes automatizados","automated testing"],"MongoDB":["mongodb"],"Vue":["vue"],"Angular":["angular"],"Git":["git"],"Node.js":["node.js","nodejs"]};
 export function matchJob(text:string,skills:string[]){
   const available=new Set(skills.map(x=>x.toLowerCase()));
-  const normalized=text.toLowerCase().replace(/react native/g,"react-native");
+  const normalized=text.toLowerCase().replace(/react[ -]native/g,"reactnative");
   const requirements=Object.entries(aliases).filter(([,terms])=>terms.some(term=>{
-    const escaped=term.replace("react native","react-native").replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    const escaped=term.replace("react native","reactnative").replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
     return new RegExp("(^|[^a-z0-9])"+escaped+"(?=$|[^a-z0-9])","i").test(normalized);
   })).map(([name])=>name);
   return {matched:requirements.filter(x=>available.has(x.toLowerCase())),missing:requirements.filter(x=>!available.has(x.toLowerCase()))};
