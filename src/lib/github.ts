@@ -2,7 +2,8 @@ import type { Profile, Repo, ImportResult, Scan } from "./model.ts";
 import { username, repoName, inspect, manifestPaths, type TreeItem } from "./engine.ts";
 
 export class ApiError extends Error {
-  constructor(public status:number,message:string){super(message);}
+  readonly status:number;
+  constructor(status:number,message:string){super(message);this.status=status;this.name="ApiError";}
 }
 type GitHubRepo={name:string;owner:{login:string};description:string|null;language:string|null;updated_at:string;fork:boolean;archived:boolean;private:boolean;visibility?:string;default_branch:string;stargazers_count:number};
 type GitHubUser={login:string;name:string|null;bio:string|null;avatar_url:string;public_repos:number};
